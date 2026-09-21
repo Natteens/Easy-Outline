@@ -1,36 +1,9 @@
-# 📝 Changelog
+# Changelog
 
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+## [0.1.0] - 2026-09-21
 
-O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
-e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Não Lançado]
-
-## [0.1.0] - 2026-09-20
-
-### Adicionado
-- ✨ Estrutura inicial do pacote Unity
-- 📦 Configuração do Package Manager
-- 📚 Documentação básica
-- 🧪 Estrutura de testes
-- 📋 Exemplos e amostras
-
-### Mudado
-- Nada ainda
-
-### Removido
-- Nada ainda
-
-### Corrigido
-- Nada ainda
-
----
-
-Os tipos de mudanças são:
-- **Adicionado** para novas funcionalidades
-- **Mudado** para mudanças em funcionalidades existentes
-- **Depreciado** para funcionalidades que serão removidas em breve
-- **Removido** para funcionalidades removidas
-- **Corrigido** para correções de bugs
-- **Segurança** para vulnerabilidades
+- Added object-aware URP RenderGraph outlines.
+- Added depth-correct occlusion, stable object IDs and multi-renderer grouping.
+- Added alpha-clipped coverage through original material depth passes.
+- Added 1–8 pixel screen-space thickness and optional internal detail.
+- Added runtime `OutlineTarget`, UI Toolkit inspectors and one-click setup.

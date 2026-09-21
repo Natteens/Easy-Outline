@@ -1,0 +1,28 @@
+.outline-inspector {
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 6px;
+}
+
+.outline-section {
+    margin-top: 4px;
+}
+
+.outline-status {
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.outline-action {
+    margin-top: 4px;
+}
+
+.outline-count {
+    margin-top: 3px;
+    margin-left: 3px;
+    color: #a9a9a9;
+}
+
+.hidden {
+    display: none;
+}

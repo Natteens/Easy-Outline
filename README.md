@@ -1,39 +1,40 @@
-# EasyOutline
+# Outline
 
-Um pacote Unity para EasyOutline
+Object-aware screen-space outlines for Unity 6 URP.
 
-## 📥 Instalação
+## Setup
 
-Este pacote pode ser instalado através do Unity Package Manager usando a URL do Git.
+1. Install the package.
+2. Run `Tools > Outline > Setup`.
+3. Add `OutlineTarget` to an object.
+4. The object and its child renderers receive one shared outline.
 
-### Via Package Manager (Recomendado)
+No material, replacement shader, gameplay layer, extra camera, or persistent render texture is required.
 
-1. Abra o Package Manager (Window > Package Manager)
-2. Clique no botão **+** no canto superior esquerdo
-3. Selecione **"Add package from git URL..."**
-4. Digite a URL: `https://github.com/Natteens/easyoutline.git`
-5. Clique em **Add**
+## Runtime
 
-### Via manifest.json
+```csharp
+using Natteens.Outline;
 
-Adicione a seguinte linha ao arquivo `Packages/manifest.json` do seu projeto:
-
-```json
-{
-  "dependencies": {
-    "com.natteens.easyoutline": "https://github.com/Natteens/easyoutline.git"
-  }
-}
+OutlineTarget target = GetComponent<OutlineTarget>();
+target.Outlined = true;
+target.ColorOverride = true;
+target.Color = Color.yellow;
+target.RefreshRenderers();
 ```
 
-## 🚀 Como Usar
+## Bulk selection
 
-*Documentação em desenvolvimento*
+Set the profile selection mode to `Layers` or `Targets + Layers`, then choose a normal Layer Mask. The default mode is `Targets`, so installing the package never outlines the entire scene.
 
-## 📝 Changelog
+## Rendering
 
-Veja o [CHANGELOG.md](CHANGELOG.md) para detalhes sobre mudanças e atualizações.
+The renderer feature runs after opaque rendering. It first captures selected depth with each object's compatible URP depth/forward pass, then writes object ID, geometric normal and optional target color into transient metadata. The composite compares selected linear eye depth with camera depth before resolving object-aware edges. Thickness above one pixel uses two linear-cost separable expansion passes.
 
-## 📄 Licença
+## Limitations
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE.md](LICENSE.md) para detalhes.
+- Opaque and alpha-clipped URP Lit/Unlit materials are supported.
+- True blended transparent objects are not supported in 0.1.0.
+- Custom shaders need a compatible `DepthOnly`, `DepthNormalsOnly`, `UniversalForward`, `UniversalForwardOnly`, or `SRPDefaultUnlit` pass.
+- XR architecture is texture-array aware but is not validated for this release.
+- The package targets the Universal 3D Renderer, not the URP 2D Renderer.

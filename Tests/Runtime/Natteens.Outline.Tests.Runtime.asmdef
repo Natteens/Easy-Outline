@@ -1,0 +1,12 @@
+{
+  "name": "Natteens.Outline.Tests.Runtime",
+  "rootNamespace": "Natteens.Outline.Tests",
+  "references": [
+    "Natteens.Outline"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false,
+  "noEngineReferences": false
+}

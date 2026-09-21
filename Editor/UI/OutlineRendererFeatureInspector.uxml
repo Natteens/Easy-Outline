@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="OutlineInspector.uss" />
+    <ui:VisualElement name="root" class="outline-inspector">
+        <ui:PropertyField binding-path="_profile" label="Profile" />
+        <ui:HelpBox name="statusBox" class="outline-status" />
+        <ui:Button name="setupButton" text="Setup / Repair" class="outline-action" />
+    </ui:VisualElement>
+</ui:UXML>

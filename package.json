@@ -1,12 +1,14 @@
 {
   "name": "com.natteens.easyoutline",
   "version": "0.1.0",
-  "displayName": "EasyOutline",
-  "description": "Um pacote Unity para EasyOutline",
+  "displayName": "Easy Outline",
+  "description": "Object-aware screen-space outlines for Unity 6 URP.",
   "keywords": [
     "Unity",
     "GameDev",
-    "EasyOutline"
+    "Outline",
+    "URP",
+    "Rendering"
   ],
   "author": {
     "name": "Natteens",
@@ -16,5 +18,8 @@
   "unity": "6000.0",
   "documentationUrl": "https://github.com/Natteens/easyoutline",
   "changelogUrl": "https://github.com/Natteens/easyoutline/blob/main/CHANGELOG.md",
-  "licensesUrl": "https://github.com/Natteens/easyoutline/blob/main/LICENSE.md"
+  "licensesUrl": "https://github.com/Natteens/easyoutline/blob/main/LICENSE.md",
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "17.0.0"
+  }
 }

@@ -1,7 +1,10 @@
 {
-  "name": "EasyOutline",
-  "rootNamespace": "EasyOutline",
-  "references": [],
+  "name": "Natteens.Outline",
+  "rootNamespace": "Natteens.Outline",
+  "references": [
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

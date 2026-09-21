@@ -1,7 +1,11 @@
 {
-  "name": "EasyOutline.Editor",
-  "rootNamespace": "EasyOutline",
-  "references": [],
+  "name": "Natteens.Outline.Editor",
+  "rootNamespace": "Natteens.Outline.Editor",
+  "references": [
+    "Natteens.Outline",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
   "includePlatforms": [
     "Editor"
   ],

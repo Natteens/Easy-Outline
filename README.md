@@ -22,6 +22,8 @@ target.ColorOverride = true;
 target.Color = Color.yellow;
 ```
 
+Set `target.Outlined = false` to turn the outline off.
+
 `RefreshRenderers()` is only needed after changing the renderer hierarchy at runtime.
 
 ## Bulk selection
@@ -30,7 +32,7 @@ Set the profile selection mode to `Layers` or `Targets + Layers`, then choose a 
 
 ## Rendering
 
-The renderer feature runs after opaque rendering. It captures alpha-clipped selected depth, writes group ID and optional target color metadata, builds a binary visible-silhouette mask, expands it to the requested thickness, and composites the outline once. Depth is used only to reject occluded pixels and resolve ownership; it never changes line color, opacity, or thickness.
+The renderer feature resolves visible object pixels, expands their 2D silhouette to the profile thickness, and draws one uniform border. It runs after the skybox so outlines remain visible in Game and Scene View. Depth only decides which selected pixels are visible before expansion.
 
 Renderers resolved by one `OutlineTarget` share a group ID, so a character assembled from body, hair, armor, and weapons receives one combined silhouette without seams. Independent targets remain distinguishable where they touch.
 

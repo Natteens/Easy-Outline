@@ -118,8 +118,9 @@ namespace Natteens.Outline.Tests
         {
             var profile = ScriptableObject.CreateInstance<OutlineProfile>();
             Assert.That(profile.Enabled, Is.True);
-            Assert.That(profile.Thickness, Is.InRange(1, 8));
-            Assert.That(profile.Opacity, Is.InRange(0f, 1f));
+            Assert.That(profile.Thickness, Is.EqualTo(2));
+            Assert.That(profile.Color, Is.EqualTo(Color.black));
+            Assert.That(profile.Opacity, Is.EqualTo(1f));
             Assert.That(profile.RenderGameCameras, Is.True);
             Assert.That(profile.RenderSceneView, Is.True);
             Object.DestroyImmediate(profile);

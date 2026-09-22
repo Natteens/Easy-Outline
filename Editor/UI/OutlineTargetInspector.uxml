@@ -1,18 +1,33 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
-    <ui:VisualElement name="root" class="outline-inspector">
-        <uie:PropertyField binding-path="_outlined" label="Outlined" />
-        <ui:Foldout text="Renderers" value="true" class="outline-section">
-            <uie:PropertyField name="autoCollectField" binding-path="_autoCollect" label="Auto Collect" />
-            <uie:PropertyField name="includeChildrenField" binding-path="_includeChildren" label="Include Children" />
-            <uie:PropertyField name="renderersField" binding-path="_renderers" label="Renderers" />
-            <ui:Label name="rendererCount" class="outline-count" />
-            <ui:HelpBox name="rendererWarning" text="No Renderer was found. Add one to this object or its children, or assign the list manually." message-type="Warning" class="outline-status" />
-            <ui:Button name="refreshButton" text="Refresh Renderers" class="outline-action" />
-        </ui:Foldout>
-        <ui:Foldout text="Color" value="true" class="outline-section">
-            <uie:PropertyField name="colorOverrideField" binding-path="_colorOverride" label="Override" />
-            <uie:PropertyField name="colorField" binding-path="_color" label="Color" />
-        </ui:Foldout>
+    <ui:VisualElement name="root" class="easyoutline-root">
+        <ui:VisualElement class="easyoutline-header">
+            <ui:VisualElement class="easyoutline-header-copy">
+                <ui:Label text="EASY OUTLINE TARGET" class="easyoutline-title" />
+                <ui:Label text="Object silhouette" class="easyoutline-subtitle" />
+            </ui:VisualElement>
+            <ui:Label name="statusLabel" text="Checking" class="easyoutline-status" />
+        </ui:VisualElement>
+
+        <ui:Toggle name="outlinedField" binding-path="_outlined" text="Outline this object" class="easyoutline-primary-toggle" />
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="RENDERERS" class="easyoutline-section-title" />
+            <ui:Toggle name="autoCollectField" binding-path="_autoCollect" label="Auto Collect" />
+            <ui:Toggle name="includeChildrenField" binding-path="_includeChildren" label="Include Children" />
+            <ui:Label name="rendererCount" text="0 renderers resolved" class="easyoutline-renderer-count" />
+            <ui:VisualElement name="rendererList" class="easyoutline-renderer-list" />
+            <ui:HelpBox name="rendererWarning" text="No Renderer was found for this OutlineTarget." message-type="Warning" class="easyoutline-hint" />
+            <ui:Button name="refreshButton" text="Refresh Renderers" class="easyoutline-action" />
+            <ui:Foldout name="manualRendererFoldout" text="Manual Renderer References" value="false" class="easyoutline-advanced">
+                <uie:PropertyField binding-path="_renderers" label="Renderers" />
+            </ui:Foldout>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="APPEARANCE" class="easyoutline-section-title" />
+            <ui:Toggle name="colorOverrideField" binding-path="_colorOverride" label="Override Color" />
+            <uie:ColorField name="colorField" binding-path="_color" label="Color" show-alpha="false" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

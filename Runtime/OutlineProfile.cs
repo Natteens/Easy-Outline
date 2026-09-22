@@ -11,7 +11,7 @@ namespace Natteens.Outline
         [SerializeField] private LayerMask _layerMask;
         [SerializeField, Range(1, 8)] private int _thickness = 2;
         [SerializeField] private OutlineColorMode _colorMode = OutlineColorMode.Fixed;
-        [SerializeField] private Color _color = new(0.02f, 0.02f, 0.025f, 1f);
+        [SerializeField] private Color _color = Color.black;
         [SerializeField, Range(0f, 1f)] private float _opacity = 1f;
         [SerializeField, Range(0f, 1f)] private float _adaptiveDarken = 0.55f;
         [SerializeField] private bool _renderGameCameras = true;

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Resolved selected visibility before silhouette dilation, removing destination-depth clipping.
+- Moved the outline pass after the skybox so Scene View contours remain complete against the sky.
+- Replaced depth-carrying RGBA16F dilation buffers with compact group and color data.
+- Added a background-depth regression sphere and movable wall to the QA scene.
+- Rebuilt the profile, target, and renderer feature inspectors with compact controls and live status.
 - Replaced normal/depth crease detection with a stable binary silhouette mask.
 - Made thickness expansion preserve uniform opacity and deterministic object ownership.
 - Removed the normals metadata buffer and internal-detail settings.

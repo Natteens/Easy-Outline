@@ -1,26 +1,51 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
-    <ui:VisualElement name="root" class="outline-inspector">
-        <uie:PropertyField binding-path="_enabled" label="Enabled" />
-        <ui:Foldout text="Selection" value="true" class="outline-section">
+    <ui:VisualElement name="root" class="easyoutline-root">
+        <ui:VisualElement class="easyoutline-header">
+            <ui:VisualElement class="easyoutline-header-copy">
+                <ui:Label text="EASY OUTLINE" class="easyoutline-title" />
+                <ui:Label text="Silhouette profile" class="easyoutline-subtitle" />
+            </ui:VisualElement>
+            <ui:Label name="statusLabel" text="Checking" class="easyoutline-status" />
+        </ui:VisualElement>
+        <ui:HelpBox name="integrationHint" message-type="Warning" class="easyoutline-hint" />
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="SELECTION" class="easyoutline-section-title" />
             <uie:PropertyField name="selectionModeField" binding-path="_selectionMode" label="Mode" />
-            <uie:PropertyField binding-path="_targetRenderingLayerBit" label="Target Rendering Layer Bit" />
-            <uie:PropertyField name="layerMaskField" binding-path="_layerMask" label="Layer Mask" />
-        </ui:Foldout>
-        <ui:Foldout text="Outline" value="true" class="outline-section">
-            <uie:PropertyField binding-path="_thickness" label="Thickness" />
+            <uie:PropertyField name="layerMaskField" binding-path="_layerMask" label="Layers" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="OUTLINE" class="easyoutline-section-title" />
+            <ui:Toggle name="enabledField" binding-path="_enabled" label="Enabled" />
+            <ui:VisualElement class="easyoutline-slider-row">
+                <ui:SliderInt name="thicknessField" binding-path="_thickness" label="Thickness" low-value="1" high-value="8" class="easyoutline-slider" />
+                <ui:Label name="thicknessValue" text="2 px" class="easyoutline-value" />
+            </ui:VisualElement>
             <uie:PropertyField name="colorModeField" binding-path="_colorMode" label="Color Mode" />
-            <uie:PropertyField name="fixedColorField" binding-path="_color" label="Color" />
-            <uie:PropertyField name="adaptiveDarkenField" binding-path="_adaptiveDarken" label="Adaptive Darken" />
-            <uie:PropertyField binding-path="_opacity" label="Opacity" />
-        </ui:Foldout>
-        <ui:Foldout text="Cameras" value="false" class="outline-section">
-            <uie:PropertyField binding-path="_renderGameCameras" label="Game View" />
-            <uie:PropertyField binding-path="_renderSceneView" label="Scene View" />
-            <uie:PropertyField binding-path="_renderOverlayCameras" label="Overlay Cameras" />
-        </ui:Foldout>
-        <ui:Foldout text="Debug" value="false" class="outline-section">
+            <uie:ColorField name="fixedColorField" binding-path="_color" label="Color" show-alpha="false" />
+            <uie:PropertyField name="adaptiveDarkenField" binding-path="_adaptiveDarken" label="Darken" />
+            <ui:VisualElement class="easyoutline-slider-row">
+                <ui:Slider name="opacityField" binding-path="_opacity" label="Opacity" low-value="0" high-value="1" class="easyoutline-slider" />
+                <ui:Label name="opacityValue" text="1.00" class="easyoutline-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="CAMERAS" class="easyoutline-section-title" />
+            <ui:Toggle binding-path="_renderGameCameras" label="Game View" />
+            <ui:Toggle binding-path="_renderSceneView" label="Scene View" />
+            <ui:Toggle binding-path="_renderOverlayCameras" label="Overlay Cameras" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="DEBUG" class="easyoutline-section-title" />
             <uie:PropertyField binding-path="_debugMode" label="View" />
+        </ui:VisualElement>
+
+        <ui:Foldout text="Advanced" value="false" class="easyoutline-advanced">
+            <uie:PropertyField binding-path="_targetRenderingLayerBit" label="Reserved Rendering Layer Bit" />
         </ui:Foldout>
     </ui:VisualElement>
 </ui:UXML>

@@ -16,9 +16,9 @@ namespace Natteens.Outline
     public enum OutlineDebugMode
     {
         None,
-        Selection,
+        SelectedMask,
         ObjectIds,
         OutlineMask,
-        Visibility
+        VisibleMask
     }
 }

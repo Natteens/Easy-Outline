@@ -32,7 +32,6 @@ Shader "Hidden/Natteens/Outline/Metadata"
             struct Attributes
             {
                 float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -40,15 +39,13 @@ Shader "Hidden/Natteens/Outline/Metadata"
             {
                 float4 positionCS : SV_POSITION;
                 nointerpolation float3 objectId : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
             struct FragmentOutput
             {
                 float4 metadata : SV_Target0;
-                float4 normal : SV_Target1;
-                float4 targetColor : SV_Target2;
+                float4 targetColor : SV_Target1;
             };
 
             float3 HashObject(float3 originWS, float3 axisX, float3 axisY, float3 axisZ)
@@ -78,7 +75,6 @@ Shader "Hidden/Natteens/Outline/Metadata"
                     float3 axisZ = TransformObjectToWorld(float3(0, 0, 1)) - origin;
                     output.objectId = HashObject(origin, axisX, axisY, axisZ);
                 }
-                output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 return output;
             }
 
@@ -87,7 +83,6 @@ Shader "Hidden/Natteens/Outline/Metadata"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 FragmentOutput output;
                 output.metadata = float4(input.objectId, 1);
-                output.normal = float4(normalize(input.normalWS) * 0.5 + 0.5, 1);
                 output.targetColor = float4(_OutlineTargetColor.rgb, saturate(_OutlineUseTargetColor));
                 return output;
             }

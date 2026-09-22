@@ -1,18 +1,18 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
     <ui:VisualElement name="root" class="outline-inspector">
-        <ui:PropertyField binding-path="_outlined" label="Outlined" />
+        <uie:PropertyField binding-path="_outlined" label="Outlined" />
         <ui:Foldout text="Renderers" value="true" class="outline-section">
-            <ui:PropertyField name="autoCollectField" binding-path="_autoCollect" label="Auto Collect" />
-            <ui:PropertyField name="includeChildrenField" binding-path="_includeChildren" label="Include Children" />
-            <ui:PropertyField name="renderersField" binding-path="_renderers" label="Renderers" />
+            <uie:PropertyField name="autoCollectField" binding-path="_autoCollect" label="Auto Collect" />
+            <uie:PropertyField name="includeChildrenField" binding-path="_includeChildren" label="Include Children" />
+            <uie:PropertyField name="renderersField" binding-path="_renderers" label="Renderers" />
             <ui:Label name="rendererCount" class="outline-count" />
             <ui:HelpBox name="rendererWarning" text="No Renderer was found. Add one to this object or its children, or assign the list manually." message-type="Warning" class="outline-status" />
             <ui:Button name="refreshButton" text="Refresh Renderers" class="outline-action" />
         </ui:Foldout>
         <ui:Foldout text="Color" value="true" class="outline-section">
-            <ui:PropertyField name="colorOverrideField" binding-path="_colorOverride" label="Override" />
-            <ui:PropertyField name="colorField" binding-path="_color" label="Color" />
+            <uie:PropertyField name="colorOverrideField" binding-path="_colorOverride" label="Override" />
+            <uie:PropertyField name="colorField" binding-path="_color" label="Color" />
         </ui:Foldout>
     </ui:VisualElement>
 </ui:UXML>

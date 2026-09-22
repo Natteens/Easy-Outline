@@ -1,34 +1,26 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
     <ui:VisualElement name="root" class="outline-inspector">
-        <ui:PropertyField binding-path="_enabled" label="Enabled" />
+        <uie:PropertyField binding-path="_enabled" label="Enabled" />
         <ui:Foldout text="Selection" value="true" class="outline-section">
-            <ui:PropertyField name="selectionModeField" binding-path="_selectionMode" label="Mode" />
-            <ui:PropertyField binding-path="_targetRenderingLayerBit" label="Target Rendering Layer Bit" />
-            <ui:PropertyField name="layerMaskField" binding-path="_layerMask" label="Layer Mask" />
+            <uie:PropertyField name="selectionModeField" binding-path="_selectionMode" label="Mode" />
+            <uie:PropertyField binding-path="_targetRenderingLayerBit" label="Target Rendering Layer Bit" />
+            <uie:PropertyField name="layerMaskField" binding-path="_layerMask" label="Layer Mask" />
         </ui:Foldout>
         <ui:Foldout text="Outline" value="true" class="outline-section">
-            <ui:PropertyField binding-path="_thickness" label="Thickness" />
-            <ui:PropertyField name="colorModeField" binding-path="_colorMode" label="Color Mode" />
-            <ui:PropertyField name="fixedColorField" binding-path="_color" label="Color" />
-            <ui:PropertyField name="adaptiveDarkenField" binding-path="_adaptiveDarken" label="Adaptive Darken" />
-            <ui:PropertyField binding-path="_opacity" label="Opacity" />
-        </ui:Foldout>
-        <ui:Foldout text="Internal Detail" value="false" class="outline-section">
-            <ui:PropertyField name="internalDetailField" binding-path="_internalDetail" label="Enabled" />
-            <ui:PropertyField name="internalStrengthField" binding-path="_internalDetailStrength" label="Strength" />
+            <uie:PropertyField binding-path="_thickness" label="Thickness" />
+            <uie:PropertyField name="colorModeField" binding-path="_colorMode" label="Color Mode" />
+            <uie:PropertyField name="fixedColorField" binding-path="_color" label="Color" />
+            <uie:PropertyField name="adaptiveDarkenField" binding-path="_adaptiveDarken" label="Adaptive Darken" />
+            <uie:PropertyField binding-path="_opacity" label="Opacity" />
         </ui:Foldout>
         <ui:Foldout text="Cameras" value="false" class="outline-section">
-            <ui:PropertyField binding-path="_renderGameCameras" label="Game View" />
-            <ui:PropertyField binding-path="_renderSceneView" label="Scene View" />
-            <ui:PropertyField binding-path="_renderOverlayCameras" label="Overlay Cameras" />
-        </ui:Foldout>
-        <ui:Foldout text="Advanced" value="false" class="outline-section">
-            <ui:PropertyField binding-path="_depthThreshold" label="Depth Threshold" />
-            <ui:PropertyField binding-path="_normalThreshold" label="Normal Threshold" />
+            <uie:PropertyField binding-path="_renderGameCameras" label="Game View" />
+            <uie:PropertyField binding-path="_renderSceneView" label="Scene View" />
+            <uie:PropertyField binding-path="_renderOverlayCameras" label="Overlay Cameras" />
         </ui:Foldout>
         <ui:Foldout text="Debug" value="false" class="outline-section">
-            <ui:PropertyField binding-path="_debugMode" label="View" />
+            <uie:PropertyField binding-path="_debugMode" label="View" />
         </ui:Foldout>
     </ui:VisualElement>
 </ui:UXML>

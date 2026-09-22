@@ -15,8 +15,6 @@ namespace Natteens.Outline.Editor
             PropertyField colorMode = root.Q<PropertyField>("colorModeField");
             PropertyField fixedColor = root.Q<PropertyField>("fixedColorField");
             PropertyField adaptiveDarken = root.Q<PropertyField>("adaptiveDarkenField");
-            PropertyField internalDetail = root.Q<PropertyField>("internalDetailField");
-            PropertyField internalStrength = root.Q<PropertyField>("internalStrengthField");
 
             void Refresh()
             {
@@ -25,12 +23,10 @@ namespace Natteens.Outline.Editor
                 OutlineColorMode color = (OutlineColorMode)serializedObject.FindProperty("_colorMode").enumValueIndex;
                 OutlineEditorUi.SetVisible(fixedColor, color == OutlineColorMode.Fixed);
                 OutlineEditorUi.SetVisible(adaptiveDarken, color == OutlineColorMode.Adaptive);
-                OutlineEditorUi.SetVisible(internalStrength, serializedObject.FindProperty("_internalDetail").boolValue);
             }
 
             selectionMode?.RegisterValueChangeCallback(_ => Refresh());
             colorMode?.RegisterValueChangeCallback(_ => Refresh());
-            internalDetail?.RegisterValueChangeCallback(_ => Refresh());
             root.Bind(serializedObject);
             Refresh();
             return root;

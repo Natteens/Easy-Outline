@@ -12,15 +12,15 @@ Shader "Hidden/Natteens/Outline/Composite"
         #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
         TEXTURE2D_X(_OutlineMetadata);
-        TEXTURE2D_X(_OutlineNormals);
         TEXTURE2D_X(_OutlineTargetColors);
         TEXTURE2D_X_FLOAT(_OutlineSelectedDepth);
         TEXTURE2D_X_FLOAT(_OutlineCameraDepth);
+        TEXTURE2D_X(_OutlineOwner);
         TEXTURE2D_X(_OutlineDilated);
+        TEXTURE2D_X(_OutlineDilatedOwner);
 
         float4 _OutlineFixedColor;
         float4 _OutlineSettings;
-        float4 _OutlineDetail;
         int _OutlineDebugMode;
 
         int2 TextureSize()
@@ -48,13 +48,6 @@ Shader "Hidden/Natteens/Outline/Composite"
             return LOAD_TEXTURE2D_X(_OutlineTargetColors, ClampCoord(coord));
         }
 
-        float3 NormalAt(int2 coord)
-        {
-            float3 normal = LOAD_TEXTURE2D_X(_OutlineNormals, ClampCoord(coord)).rgb * 2.0 - 1.0;
-            float lengthSquared = dot(normal, normal);
-            return lengthSquared > 1e-6 ? normal * rsqrt(lengthSquared) : float3(0, 0, 1);
-        }
-
         float EyeDepth(float rawDepth)
         {
             return unity_OrthoParams.w > 0.5 ? LinearDepthToEyeDepth(rawDepth) : LinearEyeDepth(rawDepth, _ZBufferParams);
@@ -70,6 +63,11 @@ Shader "Hidden/Natteens/Outline/Composite"
             return EyeDepth(LOAD_TEXTURE2D_X(_OutlineCameraDepth, ClampCoord(coord)).r);
         }
 
+        float DepthTolerance(float a, float b)
+        {
+            return max(0.0005, min(a, b) * 0.0001);
+        }
+
         bool SelectedAt(int2 coord)
         {
             return MetadataAt(coord).a > 0.5;
@@ -81,8 +79,7 @@ Shader "Hidden/Natteens/Outline/Composite"
                 return false;
             float selectedDepth = SelectedEyeDepth(selectedCoord);
             float sceneDepth = CameraEyeDepth(sceneCoord);
-            float tolerance = max(0.0005, min(selectedDepth, sceneDepth) * 0.0001);
-            return selectedDepth <= sceneDepth + tolerance;
+            return selectedDepth <= sceneDepth + DepthTolerance(selectedDepth, sceneDepth);
         }
 
         bool SameObject(float3 a, float3 b)
@@ -95,11 +92,6 @@ Shader "Hidden/Natteens/Outline/Composite"
             if (abs(a.r - b.r) > 0.0015) return a.r < b.r;
             if (abs(a.g - b.g) > 0.0015) return a.g < b.g;
             return a.b < b.b;
-        }
-
-        float RelativeDepthDelta(float a, float b)
-        {
-            return abs(a - b) / max(min(a, b), 0.001);
         }
 
         float3 SourceColorAt(int2 coord)
@@ -122,8 +114,8 @@ Shader "Hidden/Natteens/Outline/Composite"
         {
             int2 bestOwner = center;
             float4 centerMetadata = MetadataAt(center);
-            bool centerSelected = centerMetadata.a > 0.5;
-            bool centerVisible = centerSelected && VisibleAt(center, center);
+            bool centerVisible = centerMetadata.a > 0.5 && VisibleAt(center, center);
+            bool objectBoundary = false;
             float bestDepth = 1e30;
 
             [unroll] for (int y = -1; y <= 1; y++)
@@ -135,11 +127,12 @@ Shader "Hidden/Natteens/Outline/Composite"
                     float4 neighborMetadata = MetadataAt(neighbor);
                     bool neighborVisible = neighborMetadata.a > 0.5 && VisibleAt(neighbor, neighbor);
 
-                    if (!centerSelected && neighborVisible && VisibleAt(neighbor, center))
+                    if (!centerVisible && neighborVisible && VisibleAt(neighbor, center))
                     {
                         float neighborDepth = SelectedEyeDepth(neighbor);
                         if (neighborDepth < bestDepth ||
-                            (abs(neighborDepth - bestDepth) <= max(neighborDepth * 0.0001, 0.0005) && StableIdLess(neighborMetadata.rgb, MetadataAt(bestOwner).rgb)))
+                            (abs(neighborDepth - bestDepth) <= DepthTolerance(neighborDepth, bestDepth) &&
+                             StableIdLess(neighborMetadata.rgb, MetadataAt(bestOwner).rgb)))
                         {
                             bestOwner = neighbor;
                             bestDepth = neighborDepth;
@@ -147,64 +140,23 @@ Shader "Hidden/Natteens/Outline/Composite"
                     }
                     else if (centerVisible && neighborVisible && !SameObject(centerMetadata.rgb, neighborMetadata.rgb))
                     {
-                        float centerDepth = SelectedEyeDepth(center);
-                        float neighborDepth = SelectedEyeDepth(neighbor);
-                        float tolerance = max(min(centerDepth, neighborDepth) * 0.0001, 0.0005);
-                        if (centerDepth + tolerance < neighborDepth ||
-                            (abs(centerDepth - neighborDepth) <= tolerance && StableIdLess(centerMetadata.rgb, neighborMetadata.rgb)))
-                            return float3(1.0, center);
+                        objectBoundary = true;
                     }
                 }
             }
 
-            return float3(bestDepth < 1e29 ? 1.0 : 0.0, bestOwner);
+            return float3(objectBoundary || bestDepth < 1e29 ? 1.0 : 0.0, objectBoundary ? center : bestOwner);
         }
 
-        float ResolveInternalDetail(int2 center)
-        {
-            if (_OutlineDetail.x < 0.5 || !VisibleAt(center, center))
-                return 0.0;
-
-            int2 left = ClampCoord(center + int2(-1, 0));
-            int2 right = ClampCoord(center + int2(1, 0));
-            int2 top = ClampCoord(center + int2(0, -1));
-            int2 bottom = ClampCoord(center + int2(0, 1));
-            float3 id = MetadataAt(center).rgb;
-            if (!VisibleAt(left, left) || !VisibleAt(right, right) || !VisibleAt(top, top) || !VisibleAt(bottom, bottom) ||
-                !SameObject(id, MetadataAt(left).rgb) || !SameObject(id, MetadataAt(right).rgb) ||
-                !SameObject(id, MetadataAt(top).rgb) || !SameObject(id, MetadataAt(bottom).rgb))
-                return 0.0;
-
-            float3 normal = NormalAt(center);
-            float normalLeft = 1.0 - saturate(dot(normal, NormalAt(left)));
-            float normalRight = 1.0 - saturate(dot(normal, NormalAt(right)));
-            float normalTop = 1.0 - saturate(dot(normal, NormalAt(top)));
-            float normalBottom = 1.0 - saturate(dot(normal, NormalAt(bottom)));
-            float normalContrast = max(abs(normalLeft - normalRight), abs(normalTop - normalBottom));
-            float normalPeak = max(max(normalLeft, normalRight), max(normalTop, normalBottom));
-            float normalSignal = smoothstep(_OutlineDetail.w * 0.35, _OutlineDetail.w, normalContrast) *
-                smoothstep(_OutlineDetail.w * 0.3, _OutlineDetail.w * 1.15, normalPeak);
-
-            float centerDepth = SelectedEyeDepth(center);
-            float depthLeft = RelativeDepthDelta(centerDepth, SelectedEyeDepth(left));
-            float depthRight = RelativeDepthDelta(centerDepth, SelectedEyeDepth(right));
-            float depthTop = RelativeDepthDelta(centerDepth, SelectedEyeDepth(top));
-            float depthBottom = RelativeDepthDelta(centerDepth, SelectedEyeDepth(bottom));
-            float depthContrast = max(abs(depthLeft - depthRight), abs(depthTop - depthBottom));
-            float depthSignal = smoothstep(_OutlineDetail.z, _OutlineDetail.z * 2.0, depthContrast);
-            return saturate(max(normalSignal, depthSignal) * _OutlineDetail.y);
-        }
-
-        float4 DebugOutput(int2 center, float silhouette, float detail)
+        float4 DebugOutput(int2 center, float outlineMask)
         {
             float4 metadata = MetadataAt(center);
             bool selected = metadata.a > 0.5;
             bool visible = selected && VisibleAt(center, center);
-            if (_OutlineDebugMode == 1) return float4(visible ? 1.0.xxx : 0.0.xxx, 1);
+            if (_OutlineDebugMode == 1) return float4(selected ? 1.0.xxx : 0.0.xxx, 1);
             if (_OutlineDebugMode == 2) return float4(selected ? metadata.rgb : 0.0.xxx, 1);
-            if (_OutlineDebugMode == 3) return float4(silhouette.xxx, 1);
-            if (_OutlineDebugMode == 4) return float4(detail.xxx, 1);
-            if (_OutlineDebugMode == 5) return float4(selected ? (visible ? float3(0.15, 1, 0.25) : float3(1, 0.1, 0.1)) : 0.0.xxx, 1);
+            if (_OutlineDebugMode == 3) return float4((outlineMask > 0.5 ? 1.0 : 0.0).xxx, 1);
+            if (_OutlineDebugMode == 4) return float4(selected ? (visible ? float3(0.15, 1, 0.25) : float3(1, 0.1, 0.1)) : 0.0.xxx, 1);
             return 0;
         }
 
@@ -214,46 +166,66 @@ Shader "Hidden/Natteens/Outline/Composite"
             int2 center = PixelCoord(input.texcoord);
             float4 baseColor = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, input.texcoord, 0);
             float3 silhouette = ResolveSilhouette(center);
-            int2 owner = int2(silhouette.yz);
-            float detail = ResolveInternalDetail(center);
             if (_OutlineDebugMode != 0)
-                return DebugOutput(center, silhouette.x, detail);
-            if (silhouette.x > 0.0)
-                baseColor.rgb = lerp(baseColor.rgb, LineColorAt(owner), saturate(_OutlineSettings.x * silhouette.x));
-            else if (detail > 0.0)
-                baseColor.rgb = lerp(baseColor.rgb, LineColorAt(center), saturate(_OutlineSettings.x * detail));
+                return DebugOutput(center, silhouette.x);
+            if (silhouette.x > 0.5)
+                baseColor.rgb = lerp(baseColor.rgb, LineColorAt(int2(silhouette.yz)), saturate(_OutlineSettings.x));
             return baseColor;
         }
 
-        float4 ResolveEdge(Varyings input) : SV_Target
+        struct EdgeOutput
+        {
+            float4 edge : SV_Target0;
+            float4 owner : SV_Target1;
+        };
+
+        EdgeOutput ResolveEdge(Varyings input)
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             int2 center = PixelCoord(input.texcoord);
             float3 silhouette = ResolveSilhouette(center);
-            int2 owner = int2(silhouette.yz);
-            return float4(LineColorAt(owner), silhouette.x > 0.0 ? SelectedEyeDepth(owner) : 0.0);
+            int2 ownerCoord = int2(silhouette.yz);
+            EdgeOutput output;
+            output.edge = silhouette.x > 0.5 ? float4(LineColorAt(ownerCoord), SelectedEyeDepth(ownerCoord)) : 0;
+            output.owner = silhouette.x > 0.5 ? float4(MetadataAt(ownerCoord).rgb, 1) : 0;
+            return output;
         }
 
-        float4 HorizontalDilate(Varyings input) : SV_Target
+        EdgeOutput HorizontalDilate(Varyings input)
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             int2 center = PixelCoord(input.texcoord);
             int radius = clamp((int)_OutlineSettings.z, 0, 7);
-            float4 best = 0;
+            float4 bestEdge = 0;
+            float4 bestOwner = 0;
             int bestDistance = 100;
+
             [unroll] for (int offset = -7; offset <= 7; offset++)
             {
                 int distance = abs(offset);
-                if (distance > radius)
-                    continue;
-                float4 candidate = LOAD_TEXTURE2D_X(_BlitTexture, ClampCoord(center + int2(offset, 0)));
-                if (candidate.a > 0.0 && distance < bestDistance)
+                if (distance <= radius)
                 {
-                    best = candidate;
-                    bestDistance = distance;
+                    int2 candidateCoord = ClampCoord(center + int2(offset, 0));
+                    float4 candidateOwner = LOAD_TEXTURE2D_X(_OutlineOwner, candidateCoord);
+                    float4 candidateEdge = LOAD_TEXTURE2D_X(_BlitTexture, candidateCoord);
+                    bool nearer = distance < bestDistance;
+                    bool stableTie = distance == bestDistance &&
+                        (candidateEdge.a < bestEdge.a ||
+                         (abs(candidateEdge.a - bestEdge.a) <= DepthTolerance(candidateEdge.a, bestEdge.a) &&
+                          StableIdLess(candidateOwner.rgb, bestOwner.rgb)));
+                    if (candidateOwner.a > 0.5 && (nearer || stableTie))
+                    {
+                        bestEdge = candidateEdge;
+                        bestOwner = candidateOwner;
+                        bestDistance = distance;
+                    }
                 }
             }
-            return best;
+
+            EdgeOutput output;
+            output.edge = bestEdge;
+            output.owner = bestOwner;
+            return output;
         }
 
         float4 DilatedComposite(Varyings input) : SV_Target
@@ -261,33 +233,56 @@ Shader "Hidden/Natteens/Outline/Composite"
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             int2 center = PixelCoord(input.texcoord);
             int radius = clamp((int)_OutlineSettings.z, 0, 7);
-            float4 edge = 0;
+            float4 bestEdge = 0;
+            float4 bestOwner = 0;
             int bestDistance = 100;
+
             [unroll] for (int offset = -7; offset <= 7; offset++)
             {
                 int distance = abs(offset);
-                if (distance > radius)
-                    continue;
-                float4 candidate = LOAD_TEXTURE2D_X(_OutlineDilated, ClampCoord(center + int2(0, offset)));
-                if (candidate.a > 0.0 && distance < bestDistance)
+                if (distance <= radius)
                 {
-                    edge = candidate;
-                    bestDistance = distance;
+                    int2 candidateCoord = ClampCoord(center + int2(0, offset));
+                    float4 candidateOwner = LOAD_TEXTURE2D_X(_OutlineDilatedOwner, candidateCoord);
+                    float4 candidateEdge = LOAD_TEXTURE2D_X(_OutlineDilated, candidateCoord);
+                    bool nearer = distance < bestDistance;
+                    bool stableTie = distance == bestDistance &&
+                        (candidateEdge.a < bestEdge.a ||
+                         (abs(candidateEdge.a - bestEdge.a) <= DepthTolerance(candidateEdge.a, bestEdge.a) &&
+                          StableIdLess(candidateOwner.rgb, bestOwner.rgb)));
+                    if (candidateOwner.a > 0.5 && (nearer || stableTie))
+                    {
+                        bestEdge = candidateEdge;
+                        bestOwner = candidateOwner;
+                        bestDistance = distance;
+                    }
                 }
             }
 
-            float sceneDepth = CameraEyeDepth(center);
-            float tolerance = max(0.0005, min(edge.a, sceneDepth) * 0.0001);
-            bool edgeVisible = edge.a > 0.0 && edge.a <= sceneDepth + tolerance;
-            float detail = ResolveInternalDetail(center);
+            float4 centerMetadata = MetadataAt(center);
+            bool centerVisible = centerMetadata.a > 0.5 && VisibleAt(center, center);
+            float3 direct = ResolveSilhouette(center);
+            bool directBoundary = centerVisible && direct.x > 0.5;
+            bool outline = false;
+            float3 lineColor = bestEdge.rgb;
+
+            if (centerVisible)
+            {
+                outline = directBoundary || (bestOwner.a > 0.5 && !SameObject(centerMetadata.rgb, bestOwner.rgb));
+                lineColor = LineColorAt(center);
+            }
+            else if (bestOwner.a > 0.5)
+            {
+                float sceneDepth = CameraEyeDepth(center);
+                outline = bestEdge.a <= sceneDepth + DepthTolerance(bestEdge.a, sceneDepth);
+            }
+
             if (_OutlineDebugMode != 0)
-                return DebugOutput(center, edgeVisible ? 1.0 : 0.0, detail);
+                return DebugOutput(center, outline ? 1.0 : 0.0);
 
             float4 baseColor = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, input.texcoord, 0);
-            if (edgeVisible)
-                baseColor.rgb = lerp(baseColor.rgb, edge.rgb, saturate(_OutlineSettings.x));
-            else if (detail > 0.0)
-                baseColor.rgb = lerp(baseColor.rgb, LineColorAt(center), saturate(_OutlineSettings.x * detail));
+            if (outline)
+                baseColor.rgb = lerp(baseColor.rgb, lineColor, saturate(_OutlineSettings.x));
             return baseColor;
         }
         ENDHLSL

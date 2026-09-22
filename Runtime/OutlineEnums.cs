@@ -18,8 +18,7 @@ namespace Natteens.Outline
         None,
         Selection,
         ObjectIds,
-        Silhouette,
-        InternalDetail,
-        DepthVisibility
+        OutlineMask,
+        Visibility
     }
 }

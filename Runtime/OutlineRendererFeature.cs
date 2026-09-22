@@ -108,14 +108,14 @@ namespace Natteens.Outline
             };
 
             private static readonly int MetadataId = Shader.PropertyToID("_OutlineMetadata");
-            private static readonly int NormalsId = Shader.PropertyToID("_OutlineNormals");
             private static readonly int TargetColorId = Shader.PropertyToID("_OutlineTargetColors");
             private static readonly int SelectedDepthId = Shader.PropertyToID("_OutlineSelectedDepth");
             private static readonly int CameraDepthId = Shader.PropertyToID("_OutlineCameraDepth");
+            private static readonly int OwnerId = Shader.PropertyToID("_OutlineOwner");
             private static readonly int DilatedId = Shader.PropertyToID("_OutlineDilated");
+            private static readonly int DilatedOwnerId = Shader.PropertyToID("_OutlineDilatedOwner");
             private static readonly int FixedColorId = Shader.PropertyToID("_OutlineFixedColor");
             private static readonly int SettingsId = Shader.PropertyToID("_OutlineSettings");
-            private static readonly int DetailId = Shader.PropertyToID("_OutlineDetail");
             private static readonly int DebugModeId = Shader.PropertyToID("_OutlineDebugMode");
 
             private static readonly ProfilingSampler SelectedDepthSampler = new("Outline / Selected Depth");
@@ -150,7 +150,6 @@ namespace Natteens.Outline
 
                 TextureHandle selectedDepth = CreateDepthTexture(renderGraph, colorDesc, "Outline.SelectedDepth");
                 TextureHandle metadata = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.Metadata");
-                TextureHandle normals = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.Normals");
                 TextureHandle targetColors = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.TargetColors");
 
                 SelectionLists lists = CreateSelectionLists(renderGraph, renderingData, cameraData, lightData);
@@ -158,7 +157,7 @@ namespace Natteens.Outline
                     return;
 
                 AddSelectedDepthPass(renderGraph, lists, selectedDepth);
-                AddMetadataPass(renderGraph, lists, selectedDepth, metadata, normals, targetColors);
+                AddMetadataPass(renderGraph, lists, selectedDepth, metadata, targetColors);
 
                 TextureDesc sourceDesc = colorDesc;
                 sourceDesc.name = "Outline.SourceColor";
@@ -168,23 +167,25 @@ namespace Natteens.Outline
                 TextureHandle sourceColor = renderGraph.CreateTexture(sourceDesc);
                 renderGraph.AddBlitPass(resources.cameraColor, sourceColor, Vector2.one, Vector2.zero, passName: "Outline / Copy Color");
 
-                if (_profile.Thickness <= 1 || _profile.DebugMode is OutlineDebugMode.Selection or OutlineDebugMode.ObjectIds or OutlineDebugMode.DepthVisibility)
+                if (_profile.Thickness <= 1 || _profile.DebugMode is OutlineDebugMode.Selection or OutlineDebugMode.ObjectIds or OutlineDebugMode.Visibility)
                 {
-                    AddCompositePass(renderGraph, sourceColor, resources.activeColorTexture, metadata, normals, targetColors,
-                        selectedDepth, resources.cameraDepthTexture, default, 0, CompositeSampler);
+                    AddCompositePass(renderGraph, sourceColor, resources.activeColorTexture, default, metadata, targetColors,
+                        selectedDepth, resources.cameraDepthTexture, default, default, default, 0, CompositeSampler);
                     return;
                 }
 
                 TextureHandle edges = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R16G16B16A16_SFloat, "Outline.Edges");
-                AddCompositePass(renderGraph, sourceColor, edges, metadata, normals, targetColors,
-                    selectedDepth, resources.cameraDepthTexture, default, 1, EdgeSampler);
+                TextureHandle edgeOwners = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.EdgeOwners");
+                AddCompositePass(renderGraph, sourceColor, edges, edgeOwners, metadata, targetColors,
+                    selectedDepth, resources.cameraDepthTexture, default, default, default, 1, EdgeSampler);
 
                 TextureHandle horizontal = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R16G16B16A16_SFloat, "Outline.HorizontalDilation");
-                AddCompositePass(renderGraph, edges, horizontal, metadata, normals, targetColors,
-                    selectedDepth, resources.cameraDepthTexture, default, 2, EdgeSampler);
+                TextureHandle horizontalOwners = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.HorizontalOwners");
+                AddCompositePass(renderGraph, edges, horizontal, horizontalOwners, metadata, targetColors,
+                    selectedDepth, resources.cameraDepthTexture, edgeOwners, default, default, 2, EdgeSampler);
 
-                AddCompositePass(renderGraph, sourceColor, resources.activeColorTexture, metadata, normals, targetColors,
-                    selectedDepth, resources.cameraDepthTexture, horizontal, 3, CompositeSampler);
+                AddCompositePass(renderGraph, sourceColor, resources.activeColorTexture, default, metadata, targetColors,
+                    selectedDepth, resources.cameraDepthTexture, default, horizontal, horizontalOwners, 3, CompositeSampler);
             }
 
             private bool ShouldRender(UniversalCameraData cameraData)
@@ -256,7 +257,7 @@ namespace Natteens.Outline
             }
 
             private static void AddMetadataPass(RenderGraph renderGraph, SelectionLists lists, TextureHandle selectedDepth,
-                TextureHandle metadata, TextureHandle normals, TextureHandle targetColors)
+                TextureHandle metadata, TextureHandle targetColors)
             {
                 using var builder = renderGraph.AddRasterRenderPass<SelectionPassData>("Outline / Metadata", out SelectionPassData data, MetadataSampler);
                 data.HasLayers = lists.HasLayers;
@@ -268,8 +269,7 @@ namespace Natteens.Outline
                 if (data.HasTargets)
                     builder.UseRendererList(data.TargetList);
                 builder.SetRenderAttachment(metadata, 0, AccessFlags.Write);
-                builder.SetRenderAttachment(normals, 1, AccessFlags.Write);
-                builder.SetRenderAttachment(targetColors, 2, AccessFlags.Write);
+                builder.SetRenderAttachment(targetColors, 1, AccessFlags.Write);
                 builder.SetRenderAttachmentDepth(selectedDepth, AccessFlags.Read);
                 builder.AllowPassCulling(false);
                 builder.SetRenderFunc(static (SelectionPassData passData, RasterGraphContext context) =>
@@ -282,8 +282,9 @@ namespace Natteens.Outline
             }
 
             private void AddCompositePass(RenderGraph renderGraph, TextureHandle source, TextureHandle destination,
-                TextureHandle metadata, TextureHandle normals, TextureHandle targetColors, TextureHandle selectedDepth,
-                TextureHandle cameraDepth, TextureHandle dilated, int shaderPass, ProfilingSampler sampler)
+                TextureHandle destinationOwner, TextureHandle metadata, TextureHandle targetColors, TextureHandle selectedDepth,
+                TextureHandle cameraDepth, TextureHandle owner, TextureHandle dilated, TextureHandle dilatedOwner,
+                int shaderPass, ProfilingSampler sampler)
             {
                 using var builder = renderGraph.AddRasterRenderPass<CompositePassData>(shaderPass switch
                 {
@@ -295,40 +296,48 @@ namespace Natteens.Outline
 
                 data.Source = source;
                 data.Destination = destination;
+                data.DestinationOwner = destinationOwner;
                 data.Metadata = metadata;
-                data.Normals = normals;
                 data.TargetColors = targetColors;
                 data.SelectedDepth = selectedDepth;
                 data.CameraDepth = cameraDepth;
+                data.Owner = owner;
                 data.Dilated = dilated;
+                data.DilatedOwner = dilatedOwner;
                 data.Material = _compositeMaterial;
                 data.ShaderPass = shaderPass;
                 data.FixedColor = _profile.Color;
                 data.Settings = new Vector4(_profile.Opacity, _profile.AdaptiveDarken, _profile.Thickness - 1, _profile.ColorMode == OutlineColorMode.Fixed ? 1f : 0f);
-                data.Detail = new Vector4(_profile.InternalDetail ? 1f : 0f, _profile.InternalDetailStrength, _profile.DepthThreshold, _profile.NormalThreshold);
                 data.DebugMode = (int)_profile.DebugMode;
 
                 builder.UseTexture(source, AccessFlags.Read);
                 builder.UseTexture(metadata, AccessFlags.Read);
-                builder.UseTexture(normals, AccessFlags.Read);
                 builder.UseTexture(targetColors, AccessFlags.Read);
                 builder.UseTexture(selectedDepth, AccessFlags.Read);
                 builder.UseTexture(cameraDepth, AccessFlags.Read);
+                if (owner.IsValid())
+                    builder.UseTexture(owner, AccessFlags.Read);
                 if (dilated.IsValid())
                     builder.UseTexture(dilated, AccessFlags.Read);
+                if (dilatedOwner.IsValid())
+                    builder.UseTexture(dilatedOwner, AccessFlags.Read);
                 builder.SetRenderAttachment(destination, 0, AccessFlags.Write);
+                if (destinationOwner.IsValid())
+                    builder.SetRenderAttachment(destinationOwner, 1, AccessFlags.Write);
                 builder.SetRenderFunc(static (CompositePassData passData, RasterGraphContext context) =>
                 {
                     passData.Material.SetTexture(MetadataId, passData.Metadata);
-                    passData.Material.SetTexture(NormalsId, passData.Normals);
                     passData.Material.SetTexture(TargetColorId, passData.TargetColors);
                     passData.Material.SetTexture(SelectedDepthId, passData.SelectedDepth);
                     passData.Material.SetTexture(CameraDepthId, passData.CameraDepth);
+                    if (passData.Owner.IsValid())
+                        passData.Material.SetTexture(OwnerId, passData.Owner);
                     if (passData.Dilated.IsValid())
                         passData.Material.SetTexture(DilatedId, passData.Dilated);
+                    if (passData.DilatedOwner.IsValid())
+                        passData.Material.SetTexture(DilatedOwnerId, passData.DilatedOwner);
                     passData.Material.SetColor(FixedColorId, passData.FixedColor);
                     passData.Material.SetVector(SettingsId, passData.Settings);
-                    passData.Material.SetVector(DetailId, passData.Detail);
                     passData.Material.SetInt(DebugModeId, passData.DebugMode);
                     Blitter.BlitTexture(context.cmd, passData.Source, new Vector4(1f, 1f, 0f, 0f), passData.Material, passData.ShaderPass);
                 });
@@ -386,17 +395,18 @@ namespace Natteens.Outline
             {
                 public TextureHandle Source;
                 public TextureHandle Destination;
+                public TextureHandle DestinationOwner;
                 public TextureHandle Metadata;
-                public TextureHandle Normals;
                 public TextureHandle TargetColors;
                 public TextureHandle SelectedDepth;
                 public TextureHandle CameraDepth;
+                public TextureHandle Owner;
                 public TextureHandle Dilated;
+                public TextureHandle DilatedOwner;
                 public Material Material;
                 public int ShaderPass;
                 public Color FixedColor;
                 public Vector4 Settings;
-                public Vector4 Detail;
                 public int DebugMode;
             }
         }

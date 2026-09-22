@@ -1,6 +1,6 @@
-# Outline
+# Easy Outline
 
-Object-aware screen-space outlines for Unity 6 URP.
+Easy Outline draws clean screen-space silhouettes around selected 3D objects in Unity URP.
 
 ## Setup
 
@@ -20,8 +20,9 @@ OutlineTarget target = GetComponent<OutlineTarget>();
 target.Outlined = true;
 target.ColorOverride = true;
 target.Color = Color.yellow;
-target.RefreshRenderers();
 ```
+
+`RefreshRenderers()` is only needed after changing the renderer hierarchy at runtime.
 
 ## Bulk selection
 
@@ -29,7 +30,9 @@ Set the profile selection mode to `Layers` or `Targets + Layers`, then choose a 
 
 ## Rendering
 
-The renderer feature runs after opaque rendering. It first captures selected depth with each object's compatible URP depth/forward pass, then writes object ID, geometric normal and optional target color into transient metadata. The composite compares selected linear eye depth with camera depth before resolving object-aware edges. Thickness above one pixel uses two linear-cost separable expansion passes.
+The renderer feature runs after opaque rendering. It captures alpha-clipped selected depth, writes group ID and optional target color metadata, builds a binary visible-silhouette mask, expands it to the requested thickness, and composites the outline once. Depth is used only to reject occluded pixels and resolve ownership; it never changes line color, opacity, or thickness.
+
+Renderers resolved by one `OutlineTarget` share a group ID, so a character assembled from body, hair, armor, and weapons receives one combined silhouette without seams. Independent targets remain distinguishable where they touch.
 
 ## Limitations
 

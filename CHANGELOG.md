@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Replaced branded Inspector headers and success badges with compact Unity-style controls and error-only help boxes.
+- Hid the internal rendering-layer bit, added an open-scene conflict repair, and kept layer selection on Unity's GameObject LayerMask.
+- Added optional occlusion-edge outlines, off by default for pure projected-object silhouettes.
 - Resolved selected visibility before silhouette dilation, removing destination-depth clipping.
 - Moved the outline pass after the skybox so Scene View contours remain complete against the sky.
 - Replaced depth-carrying RGBA16F dilation buffers with compact group and color data.

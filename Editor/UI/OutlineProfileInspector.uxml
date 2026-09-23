@@ -1,23 +1,17 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
     <ui:VisualElement name="root" class="easyoutline-root">
-        <ui:VisualElement class="easyoutline-header">
-            <ui:VisualElement class="easyoutline-header-copy">
-                <ui:Label text="EASY OUTLINE" class="easyoutline-title" />
-                <ui:Label text="Silhouette profile" class="easyoutline-subtitle" />
-            </ui:VisualElement>
-            <ui:Label name="statusLabel" text="Checking" class="easyoutline-status" />
-        </ui:VisualElement>
         <ui:HelpBox name="integrationHint" message-type="Warning" class="easyoutline-hint" />
+        <ui:Button name="repairLayerButton" text="Repair Rendering Layer" class="easyoutline-action" />
 
         <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="SELECTION" class="easyoutline-section-title" />
-            <uie:PropertyField name="selectionModeField" binding-path="_selectionMode" label="Mode" />
+            <ui:Label text="Selection" class="easyoutline-section-title" />
+            <uie:PropertyField binding-path="_selectionMode" label="Mode" />
             <uie:PropertyField name="layerMaskField" binding-path="_layerMask" label="Layers" />
         </ui:VisualElement>
 
         <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="OUTLINE" class="easyoutline-section-title" />
+            <ui:Label text="Outline" class="easyoutline-section-title" />
             <ui:Toggle name="enabledField" binding-path="_enabled" label="Enabled" />
             <ui:VisualElement class="easyoutline-slider-row">
                 <ui:SliderInt name="thicknessField" binding-path="_thickness" label="Thickness" low-value="1" high-value="8" class="easyoutline-slider" />
@@ -33,19 +27,21 @@
         </ui:VisualElement>
 
         <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="CAMERAS" class="easyoutline-section-title" />
+            <ui:Label text="Occlusion" class="easyoutline-section-title" />
+            <ui:Toggle name="occlusionEdgesField" binding-path="_outlineOcclusionEdges" label="Outline Occlusion Edges" tooltip="Draws outline along boundaries created when foreground geometry occludes the target." />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="easyoutline-section">
+            <ui:Label text="Cameras" class="easyoutline-section-title" />
             <ui:Toggle binding-path="_renderGameCameras" label="Game View" />
             <ui:Toggle binding-path="_renderSceneView" label="Scene View" />
             <ui:Toggle binding-path="_renderOverlayCameras" label="Overlay Cameras" />
         </ui:VisualElement>
 
         <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="DEBUG" class="easyoutline-section-title" />
+            <ui:Label text="Debug" class="easyoutline-section-title" />
             <uie:PropertyField binding-path="_debugMode" label="View" />
         </ui:VisualElement>
 
-        <ui:Foldout text="Advanced" value="false" class="easyoutline-advanced">
-            <uie:PropertyField binding-path="_targetRenderingLayerBit" label="Reserved Rendering Layer Bit" />
-        </ui:Foldout>
     </ui:VisualElement>
 </ui:UXML>

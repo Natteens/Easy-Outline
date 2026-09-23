@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
@@ -17,15 +19,6 @@ namespace Natteens.Outline.Editor
         public static void SetVisible(VisualElement element, bool visible)
         {
             element?.EnableInClassList("hidden", !visible);
-        }
-
-        public static void SetStatus(Label label, string text, bool ready)
-        {
-            if (label == null)
-                return;
-            label.text = text;
-            label.EnableInClassList("easyoutline-status-ready", ready);
-            label.EnableInClassList("easyoutline-status-attention", !ready);
         }
 
         public static string ProfileStatus(OutlineProfile profile)
@@ -50,11 +43,48 @@ namespace Natteens.Outline.Editor
                     {
                         profileAssigned = true;
                         if (outline.ResourcesReady)
-                            return "Ready";
+                            return HasRenderingLayerConflict(profile) ? "Rendering layer conflict" : "Ready";
                     }
                 }
             }
             return profileAssigned ? "Resources missing" : featureFound ? "Profile not assigned" : "Feature missing";
+        }
+
+        internal static bool HasRenderingLayerConflict(OutlineProfile profile)
+        {
+            if (profile.SelectionMode == OutlineSelectionMode.Layers)
+                return false;
+
+            uint bit = 1u << profile.TargetRenderingLayerBit;
+            var owned = new HashSet<Renderer>();
+            foreach (OutlineTarget target in Object.FindObjectsByType<OutlineTarget>(FindObjectsInactive.Include))
+            {
+                if (!target.isActiveAndEnabled || !target.Outlined)
+                    continue;
+                if (target.Renderers != null)
+                    foreach (Renderer renderer in target.Renderers)
+                        if (renderer != null)
+                            owned.Add(renderer);
+            }
+            foreach (Renderer renderer in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include))
+                if ((renderer.renderingLayerMask & bit) != 0 && !owned.Contains(renderer))
+                    return true;
+            return false;
+        }
+
+        internal static bool RepairRenderingLayer(OutlineProfile profile)
+        {
+            uint used = 0;
+            foreach (Renderer renderer in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include))
+                used |= renderer.renderingLayerMask;
+            for (var bit = 30; bit > 0; bit--)
+            {
+                if ((used & (1u << bit)) != 0)
+                    continue;
+                profile.TargetRenderingLayerBit = bit;
+                return true;
+            }
+            return false;
         }
     }
 }

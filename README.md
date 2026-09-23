@@ -28,7 +28,9 @@ Set `target.Outlined = false` to turn the outline off.
 
 ## Bulk selection
 
-Set the profile selection mode to `Layers` or `Targets + Layers`, then choose a normal Layer Mask. The default mode is `Targets`, so installing the package never outlines the entire scene.
+Set the profile selection mode to `Layers` or `Targets + Layers`, then choose normal Unity GameObject Layers in the LayerMask field. The default mode is `Targets`; an `OutlineTarget` needs no GameObject layer change.
+
+Disable **Outline Occlusion Edges** for an object-silhouette contour. Enable it to outline the complete boundary of each currently visible fragment, including cuts made by foreground geometry.
 
 ## Rendering
 

@@ -117,6 +117,7 @@ namespace Natteens.Outline
             private static readonly int FixedColorId = Shader.PropertyToID("_OutlineFixedColor");
             private static readonly int SettingsId = Shader.PropertyToID("_OutlineSettings");
             private static readonly int DebugModeId = Shader.PropertyToID("_OutlineDebugMode");
+            private static readonly int OcclusionEdgesId = Shader.PropertyToID("_OutlineOcclusionEdges");
 
             private static readonly ProfilingSampler SelectedDepthSampler = new("Outline / Selected Depth");
             private static readonly ProfilingSampler MetadataSampler = new("Outline / Metadata");
@@ -161,7 +162,8 @@ namespace Natteens.Outline
                 AddMetadataPass(renderGraph, lists, selectedDepth, metadata, targetColors);
 
                 TextureHandle visibleIds = CreateColorTexture(renderGraph, colorDesc, GraphicsFormat.R8G8B8A8_UNorm, "Outline.VisibleIds");
-                AddVisibilityPass(renderGraph, metadata, selectedDepth, resources.cameraDepthTexture, visibleIds, _compositeMaterial);
+                AddVisibilityPass(renderGraph, metadata, selectedDepth, resources.cameraDepthTexture, visibleIds,
+                    _compositeMaterial, _profile.OutlineOcclusionEdges);
 
                 TextureDesc sourceDesc = colorDesc;
                 sourceDesc.name = "Outline.SourceColor";
@@ -281,13 +283,14 @@ namespace Natteens.Outline
             }
 
             private static void AddVisibilityPass(RenderGraph renderGraph, TextureHandle metadata, TextureHandle selectedDepth,
-                TextureHandle cameraDepth, TextureHandle visibleIds, Material material)
+                TextureHandle cameraDepth, TextureHandle visibleIds, Material material, bool outlineOcclusionEdges)
             {
                 using var builder = renderGraph.AddRasterRenderPass<VisibilityPassData>("Outline / Visibility", out VisibilityPassData data, VisibilitySampler);
                 data.Metadata = metadata;
                 data.SelectedDepth = selectedDepth;
                 data.CameraDepth = cameraDepth;
                 data.Material = material;
+                data.OutlineOcclusionEdges = outlineOcclusionEdges;
                 builder.UseTexture(metadata, AccessFlags.Read);
                 builder.UseTexture(selectedDepth, AccessFlags.Read);
                 builder.UseTexture(cameraDepth, AccessFlags.Read);
@@ -297,6 +300,7 @@ namespace Natteens.Outline
                     passData.Material.SetTexture(MetadataId, passData.Metadata);
                     passData.Material.SetTexture(SelectedDepthId, passData.SelectedDepth);
                     passData.Material.SetTexture(CameraDepthId, passData.CameraDepth);
+                    passData.Material.SetInt(OcclusionEdgesId, passData.OutlineOcclusionEdges ? 1 : 0);
                     Blitter.BlitTexture(context.cmd, passData.Metadata, new Vector4(1f, 1f, 0f, 0f), passData.Material, 0);
                 });
             }
@@ -324,6 +328,7 @@ namespace Natteens.Outline
                 data.FixedColor = _profile.Color;
                 data.Settings = new Vector4(_profile.Opacity, _profile.AdaptiveDarken, _profile.Thickness, _profile.ColorMode == OutlineColorMode.Fixed ? 1f : 0f);
                 data.DebugMode = (int)_profile.DebugMode;
+                data.OutlineOcclusionEdges = _profile.OutlineOcclusionEdges;
 
                 builder.UseTexture(source, AccessFlags.Read);
                 builder.UseTexture(metadata, AccessFlags.Read);
@@ -348,6 +353,7 @@ namespace Natteens.Outline
                     passData.Material.SetColor(FixedColorId, passData.FixedColor);
                     passData.Material.SetVector(SettingsId, passData.Settings);
                     passData.Material.SetInt(DebugModeId, passData.DebugMode);
+                    passData.Material.SetInt(OcclusionEdgesId, passData.OutlineOcclusionEdges ? 1 : 0);
                     Blitter.BlitTexture(context.cmd, passData.Source, new Vector4(1f, 1f, 0f, 0f), passData.Material, passData.ShaderPass);
                 });
             }
@@ -413,6 +419,7 @@ namespace Natteens.Outline
                 public Color FixedColor;
                 public Vector4 Settings;
                 public int DebugMode;
+                public bool OutlineOcclusionEdges;
             }
 
             private sealed class VisibilityPassData
@@ -421,6 +428,7 @@ namespace Natteens.Outline
                 public TextureHandle SelectedDepth;
                 public TextureHandle CameraDepth;
                 public Material Material;
+                public bool OutlineOcclusionEdges;
             }
         }
     }

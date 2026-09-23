@@ -123,6 +123,7 @@ namespace Natteens.Outline.Tests
             Assert.That(profile.Opacity, Is.EqualTo(1f));
             Assert.That(profile.RenderGameCameras, Is.True);
             Assert.That(profile.RenderSceneView, Is.True);
+            Assert.That(profile.OutlineOcclusionEdges, Is.False);
             Object.DestroyImmediate(profile);
         }
     }

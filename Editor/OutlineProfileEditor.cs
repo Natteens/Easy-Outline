@@ -15,8 +15,8 @@ namespace Natteens.Outline.Editor
             PropertyField adaptiveDarken = root.Q<PropertyField>("adaptiveDarkenField");
             Label thicknessValue = root.Q<Label>("thicknessValue");
             Label opacityValue = root.Q<Label>("opacityValue");
-            Label statusLabel = root.Q<Label>("statusLabel");
             HelpBox integrationHint = root.Q<HelpBox>("integrationHint");
+            Button repairLayer = root.Q<Button>("repairLayerButton");
 
             void Refresh()
             {
@@ -29,18 +29,31 @@ namespace Natteens.Outline.Editor
                 opacityValue.text = serializedObject.FindProperty("_opacity").floatValue.ToString("0.00");
 
                 string status = OutlineEditorUi.ProfileStatus((OutlineProfile)target);
-                OutlineEditorUi.SetStatus(statusLabel, status, status == "Ready");
                 integrationHint.text = status switch
                 {
                     "URP not active" => "Easy Outline requires an active Universal Render Pipeline asset.",
                     "Feature missing" => "Run Tools > Outline > Setup to install the renderer feature.",
                     "Profile not assigned" => "Assign this profile in the active Outline Renderer Feature.",
                     "Resources missing" => "Run Tools > Outline > Setup to repair hidden shader resources.",
+                    "Rendering layer conflict" => "Another renderer in an open scene uses EasyOutline's internal rendering layer.",
                     _ => string.Empty
                 };
                 OutlineEditorUi.SetVisible(integrationHint, status != "Ready");
+                OutlineEditorUi.SetVisible(repairLayer, status == "Rendering layer conflict");
             }
 
+            repairLayer.clicked += () =>
+            {
+                OutlineProfile profile = (OutlineProfile)target;
+                Undo.RecordObject(profile, "Repair Outline Rendering Layer");
+                bool repaired = OutlineEditorUi.RepairRenderingLayer(profile);
+                if (repaired)
+                    EditorUtility.SetDirty(profile);
+                serializedObject.Update();
+                Refresh();
+                if (!repaired)
+                    integrationHint.text = "No unused rendering layer is available in the open scenes.";
+            };
             root.Bind(serializedObject);
             root.TrackSerializedObjectValue(serializedObject, _ => Refresh());
             Refresh();

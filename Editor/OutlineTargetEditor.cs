@@ -12,11 +12,10 @@ namespace Natteens.Outline.Editor
         public override VisualElement CreateInspectorGUI()
         {
             VisualElement root = OutlineEditorUi.Clone("OutlineTargetInspector");
-            Toggle outlined = root.Q<Toggle>("outlinedField");
             Toggle includeChildren = root.Q<Toggle>("includeChildrenField");
             Foldout manualRenderers = root.Q<Foldout>("manualRendererFoldout");
+            Foldout resolvedRenderers = root.Q<Foldout>("resolvedRendererFoldout");
             ColorField color = root.Q<ColorField>("colorField");
-            Label statusLabel = root.Q<Label>("statusLabel");
             Label count = root.Q<Label>("rendererCount");
             VisualElement rendererList = root.Q<VisualElement>("rendererList");
             HelpBox warning = root.Q<HelpBox>("rendererWarning");
@@ -25,12 +24,10 @@ namespace Natteens.Outline.Editor
             void RefreshState()
             {
                 bool automatic = serializedObject.FindProperty("_autoCollect").boolValue;
-                bool active = serializedObject.FindProperty("_outlined").boolValue;
                 OutlineEditorUi.SetVisible(includeChildren, automatic);
                 OutlineEditorUi.SetVisible(manualRenderers, !automatic);
                 OutlineEditorUi.SetVisible(refresh, automatic);
                 OutlineEditorUi.SetVisible(color, serializedObject.FindProperty("_colorOverride").boolValue);
-                outlined.EnableInClassList("easyoutline-primary-off", !active);
 
                 int resolved = 0;
                 foreach (Object item in targets)
@@ -40,6 +37,8 @@ namespace Natteens.Outline.Editor
                     ? $"{resolved} renderer{(resolved == 1 ? "" : "s")} resolved"
                     : $"{resolved} renderers across {targets.Length} targets";
                 OutlineEditorUi.SetVisible(warning, resolved == 0);
+                OutlineEditorUi.SetVisible(resolvedRenderers, targets.Length == 1 && resolved > 0);
+                resolvedRenderers.text = $"Resolved Renderers ({resolved})";
 
                 rendererList.Clear();
                 if (targets.Length == 1 && target is OutlineTarget single && single.Renderers != null)
@@ -61,9 +60,6 @@ namespace Natteens.Outline.Editor
                         rendererList.Add(name);
                     }
                 }
-
-                string status = targets.Length > 1 ? "Multiple" : resolved == 0 ? "No Renderers" : active ? "Active" : "Off";
-                OutlineEditorUi.SetStatus(statusLabel, status, status == "Active");
             }
 
             refresh.clicked += () =>

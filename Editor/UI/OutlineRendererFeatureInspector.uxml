@@ -1,25 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Style src="OutlineInspector.uss" />
     <ui:VisualElement name="root" class="easyoutline-root">
-        <ui:VisualElement class="easyoutline-header">
-            <ui:VisualElement class="easyoutline-header-copy">
-                <ui:Label text="EASY OUTLINE RENDERER" class="easyoutline-title" />
-                <ui:Label text="URP renderer integration" class="easyoutline-subtitle" />
-            </ui:VisualElement>
-            <ui:Label name="statusLabel" text="Checking" class="easyoutline-status" />
-        </ui:VisualElement>
-
-        <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="INTEGRATION" class="easyoutline-section-title" />
-            <uie:PropertyField binding-path="_profile" label="Profile" />
-            <ui:HelpBox name="statusBox" class="easyoutline-hint" />
-        </ui:VisualElement>
-
-        <ui:VisualElement class="easyoutline-section">
-            <ui:Label text="INTERNAL RESOURCES" class="easyoutline-section-title" />
-            <ui:Label name="metadataResource" text="Metadata shader: Checking" class="easyoutline-resource" />
-            <ui:Label name="compositeResource" text="Outline shader: Checking" class="easyoutline-resource" />
-            <ui:Button name="setupButton" text="Repair Setup" class="easyoutline-action" />
-        </ui:VisualElement>
+        <uie:PropertyField binding-path="_profile" label="Profile" />
+        <ui:HelpBox name="statusBox" message-type="Warning" class="easyoutline-hint" />
+        <ui:Button name="setupButton" text="Repair Setup" class="easyoutline-action" />
     </ui:VisualElement>
 </ui:UXML>

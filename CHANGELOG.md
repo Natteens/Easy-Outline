@@ -1,3 +1,17 @@
+# [0.2.0](https://github.com/Natteens/easyoutline/compare/v0.1.0...v0.2.0) (2026-09-23)
+
+
+### Bug Fixes
+
+* refine outline rendering and editor UX ([8c37ad8](https://github.com/Natteens/easyoutline/commit/8c37ad830cd2c961747d27d96ea09bbed655d8f0))
+* simplify outlines to stable silhouettes ([988635c](https://github.com/Natteens/easyoutline/commit/988635c4f089c18cacec9687837f442faf660167))
+
+
+### Features
+
+* create standalone outline renderer ([3fbddcd](https://github.com/Natteens/easyoutline/commit/3fbddcda22db713f2789e0b4aea71c56af50a02a))
+* refine outline controls and inspector UX ([2c9f8fe](https://github.com/Natteens/easyoutline/commit/2c9f8fe1f05b42dfb7f9fe7588564af180045334))
+
 # Changelog
 
 ## Unreleased
